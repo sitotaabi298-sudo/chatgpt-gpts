@@ -2,59 +2,69 @@ import "dotenv/config";
 
 import express from "express";
 import db from "./db/db.config.js";
-import cors from 'cors'
+import cors from "cors";
 import mainRouter from "./src/api/main.routes.js";
 import { errorHandler } from "./src/middleware/error-handler.js";
 
 const app = express();
 // Allow requests from your frontend port
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["https://chatgpt-gpts-7v7c.vercel.app/"];
+// const allowedOrigins = process.env.ALLOWED_ORIGINS
+//   ? process.env.ALLOWED_ORIGINS.split(",")
+//   : ["https://chatgpt-gpts-7v7c.vercel.app/"];
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   }),
+// );
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  ...(process.env.CORS_ORIGIN?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean) ?? []),
+  /https:\/\/chatgpt-gpts.*\.vercel\.app$/,
+];
+// Middleware
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
 
-
-
 app.use(express.json());
 app.use("/api", mainRouter);
 
+async function startServer() {
+  try {
+    console.log(
+      `Attempting to connect to database at ${process.env.DB_HOST}...`,
+    );
 
-  async function startServer() {
-    try {
-      
+    const connection = await db.getConnection();
+    console.log("Database connected successfully");
+    connection.release();
+    const PORT = process.env.PORT || 3777;
 
-      console.log(
-        `Attempting to connect to database at ${process.env.DB_HOST}...`,
-      );
-
-      const connection = await db.getConnection();
-      console.log("Database connected successfully");
-      connection.release();
-      const PORT = process.env.PORT || 3777;
-
-      app.listen(PORT, (err) => {
-        if (err) {
-          throw err;
-        }
-        console.log(`Server is running on port http://localhost:${PORT}`);
-      });
-    } catch (error) {
-      console.error("Error starting server:", error.message);
-      console.error("Full error details:", error);
-      process.exit(1);
-    }
+    app.listen(PORT, (err) => {
+      if (err) {
+        throw err;
+      }
+      console.log(`Server is running on port http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Error starting server:", error.message);
+    console.error("Full error details:", error);
+    process.exit(1);
   }
-
+}
 
 startServer();
