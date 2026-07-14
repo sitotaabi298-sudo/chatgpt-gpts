@@ -8,9 +8,21 @@ import { errorHandler } from "./src/middleware/error-handler.js";
 
 const app = express();
 // Allow requests from your frontend port
-app.use(cors({
-  origin: 'http://localhost:5173'
-}));
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["https://chatgpt-gpts.vercel.app/"];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
 
 
 
