@@ -10,7 +10,7 @@ const app = express();
 // Allow requests from your frontend port
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["https://chatgpt-gpts.vercel.app/"];
+  : ["https://chatgpt-gpts-7v7c.vercel.app/"];
 app.use(
   cors({
     origin: (origin, callback) => {
